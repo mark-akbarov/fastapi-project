@@ -3,9 +3,10 @@ from sqlalchemy import Column
 from sqlalchemy.orm import relationship
 
 from src.models import BaseModel
+from src.auth.mixins import ToDictMixin
 
 
-class User(BaseModel):
+class User(BaseModel, ToDictMixin):
     __tablename__ = 'users'
 
     id = Column(db.Integer, primary_key=True, index=True)

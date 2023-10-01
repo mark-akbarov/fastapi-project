@@ -7,21 +7,17 @@ from fastapi.security import OAuth2PasswordRequestForm
 
 from sqlalchemy.orm import Session
 
+from src.config import ACCESS_TOKEN_EXPIRE_MINUTES
+
 from .models import User, UserVerification
-from .schemas import (
-    Token, 
-    UserRegister, 
-    User as UserSchema,
-    UserVerify
-    )
+from .schemas import Token, UserRegister, User as UserSchema
 from .service import (
     get_db,
     authenticate_user,
     create_access_token,
     create_verify_user,
     create_user,
-    get_current_user,
-    ACCESS_TOKEN_EXPIRE_MINUTES
+    get_current_active_user
     )
 
 
@@ -62,7 +58,6 @@ async def login_for_access_token(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
     db: Session = Depends(get_db) 
 ):  
-    print(form_data.username, form_data.password)
     user = authenticate_user(form_data.username, form_data.password, db)
     if not user:
         raise HTTPException(
@@ -75,9 +70,6 @@ async def login_for_access_token(
     return {"access_token": access_token, "token_type": "bearer"}
 
 
-@auth_router.get("/users/me/")
-async def read_users_me(
-    current_user: Annotated[UserSchema, Depends(get_current_user)]
-):
-    return {"user": current_user}
-
+@auth_router.get("/users/me/", response_model=UserSchema)
+async def read_users_me(current_user: Annotated[UserSchema, Depends(get_current_active_user)]):
+    return current_user
